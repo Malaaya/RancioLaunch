@@ -1,5 +1,6 @@
 import os
 import re
+import json
 import sys
 import threading
 import zipfile
@@ -56,6 +57,14 @@ BAR_BOX = (300, 462, 600, 468)
 PLAY_BOX = (295, 485, 605, 530)
 MS_BOX = (295, 538, 605, 578)
 
+# Control de RAM (debajo del selector de versión)
+RAM_LABEL_Y = 341
+SLIDER_Y = 375
+SLIDER_X0, SLIDER_X1 = 305, 485          # recorrido del centro de la perilla
+RAM_BOX = (505, 354, 605, 396)           # recuadro con el valor
+RAM_MIN = 1.0                            # GB
+RAM_STEP = 0.5                           # GB
+
 VERSIONS = ["1.20.1", "1.19.4", "1.16.5"]
 GREEN = (0, 168, 89, 240)
 
@@ -68,6 +77,37 @@ EXIGIR_ACTUALIZACION = True
 
 class Cancelado(Exception):
     pass
+
+
+def obtener_ram_total_gb():
+    """RAM física total del equipo, en GB enteros (mínimo 1)."""
+    try:
+        if sys.platform == "win32":
+            class MEMORYSTATUSEX(ctypes.Structure):
+                _fields_ = [
+                    ("dwLength", ctypes.c_ulong),
+                    ("dwMemoryLoad", ctypes.c_ulong),
+                    ("ullTotalPhys", ctypes.c_ulonglong),
+                    ("ullAvailPhys", ctypes.c_ulonglong),
+                    ("ullTotalPageFile", ctypes.c_ulonglong),
+                    ("ullAvailPageFile", ctypes.c_ulonglong),
+                    ("ullTotalVirtual", ctypes.c_ulonglong),
+                    ("ullAvailVirtual", ctypes.c_ulonglong),
+                    ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+                ]
+            st = MEMORYSTATUSEX()
+            st.dwLength = ctypes.sizeof(st)
+            ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(st))
+            total = st.ullTotalPhys
+        else:
+            total = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
+        return max(int(total // (1024 ** 3)), 1)
+    except Exception:
+        return 8
+
+
+def fmt_gb(v):
+    return str(int(v)) if float(v).is_integer() else f"{v:.1f}"
 
 
 # ----------------------------------------------------------------------
@@ -121,13 +161,14 @@ def construir_fondo():
     draw_border(base, CARD, 25, BORDER_ALPHA)
 
     # Campos y botones translúcidos
-    for box in (ENTRY_BOX, VERSION_BOX, MS_BOX):
+    for box in (ENTRY_BOX, VERSION_BOX, MS_BOX, RAM_BOX):
         draw_rounded(base, box, 12, (255, 255, 255, FIELD_ALPHA))
         draw_border(base, box, 12, FIELD_BORDER, width=1)
 
     draw_rounded(base, PLAY_BOX, 12, GREEN)
     draw_rounded(base, (VERSION_BOX[2] - 44, VERSION_BOX[1] + 5, VERSION_BOX[2] - 6, VERSION_BOX[3] - 5), 10, GREEN)
     draw_rounded(base, BAR_BOX, 3, (255, 255, 255, 150))
+    draw_rounded(base, (SLIDER_X0 - 8, SLIDER_Y - 3, SLIDER_X1 + 8, SLIDER_Y + 3), 3, (255, 255, 255, 110))
 
     # Logo central del panel
     ruta_logo = next(
@@ -186,6 +227,13 @@ class RancioLaunch(ctk.CTk):
         self.cuenta = None
         self.logueando = False
         self.codigo_actual = None
+        self.ram_max = float(obtener_ram_total_gb())
+        cfg = self.cargar_config()
+        self.ram_gb = self.ajustar_ram(cfg.get("ram_gb", min(4.0, self.ram_max)))
+        self.ram_text = fmt_gb(self.ram_gb)
+        self.ram_focus = False
+        self.ram_reemplazar = False
+        self.ram_dragging = False
         self.auth = MicrosoftAuth(
             os.path.join(self.minecraft_directory, "rancio_auth.json")
         )
@@ -223,6 +271,21 @@ class RancioLaunch(ctk.CTk):
             self.menu.add_command(label=v, command=lambda v=v: self.set_version(v))
         self.after(300, lambda: threading.Thread(target=self.cargar_versiones_publicadas, daemon=True).start())
 
+        # --- Control de RAM ---
+        self.canvas.create_text(SLIDER_X0 - 5, RAM_LABEL_Y, text="Memoria RAM", anchor="w",
+                                fill="#ffffff", font=("Segoe UI", 10, "bold"))
+        self.canvas.create_text(RAM_BOX[2], RAM_LABEL_Y, text=f"Máx. {fmt_gb(self.ram_max)} GB", anchor="e",
+                                fill="#cfcfcf", font=("Segoe UI", 9))
+        self.ram_fill = self.canvas.create_line(SLIDER_X0, SLIDER_Y, SLIDER_X0, SLIDER_Y,
+                                                fill="#00e676", width=6, capstyle="round")
+        self.ram_knob = self.canvas.create_oval(0, 0, 0, 0, fill="#ffffff", outline="#00e676", width=2)
+        ry = (RAM_BOX[1] + RAM_BOX[3]) // 2
+        self.ram_t = self.canvas.create_text(RAM_BOX[0] + 40, ry, text=self.ram_text, fill="#ffffff",
+                                             font=("Segoe UI", 13, "bold"))
+        self.canvas.create_text(RAM_BOX[2] - 20, ry, text="GB", fill="#cfcfcf", font=("Segoe UI", 10, "bold"))
+        self.ram_cursor = self.canvas.create_line(0, ry - 12, 0, ry + 12, fill="#ffffff", width=2, state="hidden")
+        self.dibujar_ram()
+
         # --- Estado y progreso (encima de JUGAR AHORA) ---
         self.status_t = self.texto(450, STATUS_Y, "Listo para jugar", 10, True)
         self.copy_btn = self.canvas.create_text(
@@ -241,6 +304,8 @@ class RancioLaunch(ctk.CTk):
         self.canvas.bind("<Button-1>", self.on_click)
         self.canvas.bind("<Motion>", self.on_motion)
         self.canvas.bind("<Key>", self.on_key)
+        self.canvas.bind("<B1-Motion>", self.on_drag)
+        self.canvas.bind("<ButtonRelease-1>", self.on_release)
 
         # Carga rápida directa de sesión guardada
         sesion_local = self.auth.obtener_sesion_guardada()
@@ -268,6 +333,9 @@ class RancioLaunch(ctk.CTk):
     def mostrar_cursor(self):
         visible = self.entry_focus and self.cursor_on
         self.canvas.itemconfigure(self.cursor, state="normal" if visible else "hidden")
+        if "ram_cursor" in self.__dict__:  # todavía no existe durante el arranque
+            visible_ram = self.ram_focus and self.cursor_on
+            self.canvas.itemconfigure(self.ram_cursor, state="normal" if visible_ram else "hidden")
 
     def parpadear(self):
         self.cursor_on = not self.cursor_on
@@ -275,6 +343,10 @@ class RancioLaunch(ctk.CTk):
         self.after(500, self.parpadear)
 
     def on_key(self, e):
+        if self.ram_focus:
+            if not self.jugando:
+                self.on_key_ram(e)
+            return
         if not self.entry_focus or self.jugando or self.cuenta:
             return
         if e.keysym == "BackSpace":
@@ -307,24 +379,146 @@ class RancioLaunch(ctk.CTk):
     def on_motion(self, e):
         activo = any(self.dentro(b, e.x, e.y) for b in (VERSION_BOX, PLAY_BOX, MS_BOX))
         activo = activo or self.dentro_item(self.copy_btn, e.x, e.y)
-        if self.dentro(ENTRY_BOX, e.x, e.y):
+        if self.dentro(ENTRY_BOX, e.x, e.y) or (self.dentro(RAM_BOX, e.x, e.y) and not self.jugando):
             self.canvas.configure(cursor="xterm")
+        elif self.en_slider(e.x, e.y) and not self.jugando:
+            self.canvas.configure(cursor="hand2")
         else:
             self.canvas.configure(cursor="hand2" if activo else "")
 
     def on_click(self, e):
         self.canvas.focus_set()
+        en_ram = self.dentro(RAM_BOX, e.x, e.y) and not self.jugando
+        if self.ram_focus and not en_ram:
+            self.confirmar_ram()
+        if en_ram and not self.ram_focus:
+            self.ram_focus = True
+            self.ram_reemplazar = True   # lo primero que se escriba reemplaza el valor
         self.entry_focus = self.dentro(ENTRY_BOX, e.x, e.y)
+        self.cursor_on = True
         self.mostrar_cursor()
+        self.dibujar_ram()
 
         if self.dentro_item(self.copy_btn, e.x, e.y):
             self.copiar_codigo()
+        elif self.en_slider(e.x, e.y) and not self.jugando:
+            self.ram_dragging = True
+            self.mover_slider(e.x)
         elif self.dentro(VERSION_BOX, e.x, e.y) and not self.jugando:
             self.menu.tk_popup(self.winfo_rootx() + VERSION_BOX[0], self.winfo_rooty() + VERSION_BOX[3])
         elif self.dentro(PLAY_BOX, e.x, e.y):
             self.iniciar_proceso_juego()
         elif self.dentro(MS_BOX, e.x, e.y) and not self.jugando and not self.logueando:
             self.click_microsoft()
+
+    # ------------------------------------------------------------------
+    # RAM
+    # ------------------------------------------------------------------
+    def ajustar_ram(self, v):
+        """Limita al rango permitido y redondea al paso de 0.5 GB."""
+        try:
+            v = float(v)
+        except (TypeError, ValueError):
+            v = RAM_MIN
+        v = round(v / RAM_STEP) * RAM_STEP
+        return max(RAM_MIN, min(v, self.ram_max))
+
+    def ram_a_x(self, gb):
+        rango = self.ram_max - RAM_MIN
+        frac = (gb - RAM_MIN) / rango if rango > 0 else 0
+        return SLIDER_X0 + max(0.0, min(frac, 1.0)) * (SLIDER_X1 - SLIDER_X0)
+
+    def en_slider(self, x, y):
+        return (SLIDER_X0 - 14) <= x <= (SLIDER_X1 + 14) and abs(y - SLIDER_Y) <= 14
+
+    def mover_slider(self, x):
+        frac = max(0.0, min((x - SLIDER_X0) / (SLIDER_X1 - SLIDER_X0), 1.0))
+        self.ram_gb = self.ajustar_ram(RAM_MIN + frac * (self.ram_max - RAM_MIN))
+        self.ram_text = fmt_gb(self.ram_gb)
+        self.ram_reemplazar = False
+        self.dibujar_ram()
+
+    def on_drag(self, e):
+        if self.ram_dragging:
+            self.mover_slider(e.x)
+
+    def on_release(self, e):
+        if self.ram_dragging:
+            self.ram_dragging = False
+            self.guardar_config()
+
+    def dibujar_ram(self):
+        """Redibuja barra, perilla y número según self.ram_gb / self.ram_text."""
+        x = self.ram_a_x(self.ram_gb)
+        self.canvas.coords(self.ram_fill, SLIDER_X0, SLIDER_Y, x, SLIDER_Y)
+        self.canvas.coords(self.ram_knob, x - 8, SLIDER_Y - 8, x + 8, SLIDER_Y + 8)
+        self.set_texto(self.ram_t, self.ram_text)
+        ry = (RAM_BOX[1] + RAM_BOX[3]) // 2
+        bbox = self.canvas.bbox(self.ram_t) if self.ram_text else None
+        cx = (bbox[2] + 2) if bbox else RAM_BOX[0] + 40
+        self.canvas.coords(self.ram_cursor, cx, ry - 12, cx, ry + 12)
+        self.mostrar_cursor()
+
+    def on_key_ram(self, e):
+        if e.keysym in ("Return", "KP_Enter", "Escape"):
+            self.confirmar_ram()
+            return
+        if e.keysym == "BackSpace":
+            self.ram_text = "" if self.ram_reemplazar else self.ram_text[:-1]
+        elif e.char and e.char in "0123456789.,":
+            c = e.char.replace(",", ".")
+            base = "" if self.ram_reemplazar else self.ram_text
+            if c == "." and ("." in base or not base):
+                return
+            if len(base) >= 5:
+                return
+            self.ram_text = base + c
+        else:
+            return
+        self.ram_reemplazar = False
+
+        # Actualiza la barra en vivo mientras se escribe
+        try:
+            v = float(self.ram_text)
+        except ValueError:
+            v = None
+        if v is not None:
+            if v > self.ram_max:
+                v = self.ram_max
+                self.ram_text = fmt_gb(v)
+            self.ram_gb = self.ajustar_ram(v)
+        self.cursor_on = True
+        self.dibujar_ram()
+
+    def confirmar_ram(self):
+        """Valida lo escrito a mano, lo ajusta al rango y lo guarda."""
+        try:
+            v = float(self.ram_text)
+        except ValueError:
+            v = self.ram_gb
+        self.ram_gb = self.ajustar_ram(v)
+        self.ram_text = fmt_gb(self.ram_gb)
+        self.ram_focus = False
+        self.ram_reemplazar = False
+        self.dibujar_ram()
+        self.guardar_config()
+
+    def ruta_config(self):
+        return os.path.join(self.minecraft_directory, "rancio_config.json")
+
+    def cargar_config(self):
+        try:
+            with open(self.ruta_config(), "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+
+    def guardar_config(self):
+        try:
+            with open(self.ruta_config(), "w", encoding="utf-8") as f:
+                json.dump({"ram_gb": self.ram_gb}, f)
+        except Exception:
+            pass
 
     def copiar_codigo(self):
         if not self.codigo_actual:
@@ -531,6 +725,8 @@ class RancioLaunch(ctk.CTk):
     def iniciar_proceso_juego(self):
         if self.jugando:
             return
+        if self.ram_focus:
+            self.confirmar_ram()
         self.set_jugando(True)
         threading.Thread(target=self.ejecutar_minecraft, daemon=True).start()
 
@@ -553,6 +749,8 @@ class RancioLaunch(ctk.CTk):
             else:
                 options = {"username": self.username.strip() or "RancioJugador", "uuid": "", "token": ""}
             options["gameDirectory"] = game_dir
+            ram_mb = int(self.ram_gb * 1024)
+            options["jvmArguments"] = [f"-Xmx{ram_mb}M", f"-Xms{min(ram_mb, 1024)}M"]
 
             # 2. Manifest de mods
             entrada = None
@@ -607,4 +805,4 @@ if __name__ == "__main__":
     except Exception as e:
         print("\n--- Error al iniciar el Launcher ---")
         traceback.print_exc()
-        input("\nPresiona Enter para cerrar la consola...") #nahuel 
+        input("\nPresiona Enter para cerrar la consola...") #nahuel
