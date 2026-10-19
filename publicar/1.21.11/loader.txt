@@ -1,1 +1,1 @@
-neo-forge
+neoforge

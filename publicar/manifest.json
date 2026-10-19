@@ -1,7 +1,7 @@
 {
   "versions": {
     "1.21.11": {
-      "loader": "neo-forge",
+      "loader": "neoforge",
       "loader_version": null,
       "mods": [
         {
