@@ -1,0 +1,514 @@
+{
+  "versions": {
+    "1.21.11": {
+      "loader": "neo-forge",
+      "loader_version": null,
+      "mods": [
+        {
+          "file": "ATi Structures V1.4.6.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/ATi%20Structures%20V1.4.6.jar",
+          "sha256": "689c3ad54b321f1988572a68b850b664d335fdcdd9f7edb64af6723e434a4cd3",
+          "size": 13115969
+        },
+        {
+          "file": "AdvancementPlaques-1.21.11-neoforge-1.7.0.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/AdvancementPlaques-1.21.11-neoforge-1.7.0.jar",
+          "sha256": "1681d88590b7fc79ccc29ed5b8e190a8904044353fa140fc06d34659d28eb75d",
+          "size": 196259
+        },
+        {
+          "file": "AnvilNeverTooExpensive-neoforge-1.21.5+-1.2.1.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/AnvilNeverTooExpensive-neoforge-1.21.5%2B-1.2.1.jar",
+          "sha256": "a464deab87b4c35f412eada89464b35e6b64754fa37242a6c7b8328008b11e45",
+          "size": 5249
+        },
+        {
+          "file": "BiomesOPlenty-neoforge-1.21.11-21.11.0.31.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/BiomesOPlenty-neoforge-1.21.11-21.11.0.31.jar",
+          "sha256": "a7989184b93096cd4a145db464d2f231cd129d2c511d49a33b9025964901d0bc",
+          "size": 22797904
+        },
+        {
+          "file": "BountyBags-2.5.0.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/BountyBags-2.5.0.jar",
+          "sha256": "146220d17f1166121e4b256f50ea71adebf18e0d0584713cd621f974023c174e",
+          "size": 39136
+        },
+        {
+          "file": "Chunky-NeoForge-1.4.54.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/Chunky-NeoForge-1.4.54.jar",
+          "sha256": "97984c8d99d41afbd0a0381a7de47203ee0bf26259c2e8a8bf676d5de78b46fc",
+          "size": 352784
+        },
+        {
+          "file": "CreativeCore_NEOFORGE_v2.14.10_mc1.21.11.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/CreativeCore_NEOFORGE_v2.14.10_mc1.21.11.jar",
+          "sha256": "8e1474a146aceb5467c6a430964ad7c17932628942638f773951356535f6be72",
+          "size": 1318802
+        },
+        {
+          "file": "Ecologics-NeoForge-1.21.11-2.4.6.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/Ecologics-NeoForge-1.21.11-2.4.6.jar",
+          "sha256": "14c5f5356f9a14392c02d0bf1815ac958759d2e772263ff8ec26a6934e4d42d8",
+          "size": 1866832
+        },
+        {
+          "file": "EternalNether-v21.11.0-mc1.21.11-NeoForge.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/EternalNether-v21.11.0-mc1.21.11-NeoForge.jar",
+          "sha256": "85668e47445a77fca6cf0fffa40e42697b5b450a7f3d97135d09569d553da6b2",
+          "size": 7366171
+        },
+        {
+          "file": "Explorify v1.6.5.mod.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/Explorify%20v1.6.5.mod.jar",
+          "sha256": "2dc76398b48b2aae9b4024642da098b0880125572de160cb5ecf91d102890cad",
+          "size": 767884
+        },
+        {
+          "file": "FallingTree-1.21.11-1.21.11.3.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/FallingTree-1.21.11-1.21.11.3.jar",
+          "sha256": "6ef696e97cb84dea0449e8dc87cbfb987041fa20e62bc4d6a516eeca7e007cb7",
+          "size": 488371
+        },
+        {
+          "file": "GlitchCore-neoforge-1.21.11-21.11.0.4.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/GlitchCore-neoforge-1.21.11-21.11.0.4.jar",
+          "sha256": "1e2b3349783ab3cf25db2773af4bbcfc5eef1a99aaae918586a9b83c684a15fd",
+          "size": 104255
+        },
+        {
+          "file": "Iceberg-1.21.11-neoforge-1.4.0.1.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/Iceberg-1.21.11-neoforge-1.4.0.1.jar",
+          "sha256": "7f36950e605984d20ff40a6c6fc8012b29011878e551b708197e361be44f76fd",
+          "size": 179171
+        },
+        {
+          "file": "Jade-1.21.11-NeoForge-21.1.7.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/Jade-1.21.11-NeoForge-21.1.7.jar",
+          "sha256": "3cb7229b2319224c39f436cd686080ac32a11e816ee600c27f5d6698bb01fcda",
+          "size": 948614
+        },
+        {
+          "file": "Kobolds-4.1.1.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/Kobolds-4.1.1.jar",
+          "sha256": "e5d50e5acd415e7abcda007003f94ee305e528df4d02c41b75d63a1e76e80b62",
+          "size": 2294188
+        },
+        {
+          "file": "LazyDFU-[UNOFFICIAL]+1.21.9 neoforge.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/LazyDFU-%5BUNOFFICIAL%5D%2B1.21.9%20neoforge.jar",
+          "sha256": "da56399d6df32de777c0a095a72140b2da7b8473649a4d8d936fb79e26eec14e",
+          "size": 14292
+        },
+        {
+          "file": "MoogsVoyagerStructures-1.21-5.0.14.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/MoogsVoyagerStructures-1.21-5.0.14.jar",
+          "sha256": "28695cbb33b7af504c3b4b44dfec2449ea9c5fa4923c801d8558c965fb16bdc7",
+          "size": 1796857
+        },
+        {
+          "file": "Nullscape_1.21.x_v1.2.17.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/Nullscape_1.21.x_v1.2.17.jar",
+          "sha256": "098debe2dd9abfa9d1d8f0fa71204d998764673e81036ea9ff5082bc8a6f52e4",
+          "size": 343959
+        },
+        {
+          "file": "PlayerRevive_NEOFORGE_v2.1.0_mc1.21.11.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/PlayerRevive_NEOFORGE_v2.1.0_mc1.21.11.jar",
+          "sha256": "f4e7ec6df9be6d80489b024f9d5f79546a12ab21de9d88b6ed74bfd3c122e515",
+          "size": 5302759
+        },
+        {
+          "file": "PuzzlesLib-v21.11.13-mc1.21.11-NeoForge.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/PuzzlesLib-v21.11.13-mc1.21.11-NeoForge.jar",
+          "sha256": "819b516884a9ea6b66cfd2a8a6410e8956a06119df0a8935593e5a49361c6a96",
+          "size": 1066137
+        },
+        {
+          "file": "ResourcefulLib-neoforge-1.21.11-3.11.0.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/ResourcefulLib-neoforge-1.21.11-3.11.0.jar",
+          "sha256": "6ec328504564a9fc7df62915550ea36c02cea150909225a304a97917751fba10",
+          "size": 458611
+        },
+        {
+          "file": "RoughlyEnoughItems-21.11.816-neoforge.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/RoughlyEnoughItems-21.11.816-neoforge.jar",
+          "sha256": "33afec41ce525623b8251606f02748954880818b0bf689a7c9440b59503fb768",
+          "size": 2411963
+        },
+        {
+          "file": "StorageDrawers-neoforge-1.21.11-20.0.0.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/StorageDrawers-neoforge-1.21.11-20.0.0.jar",
+          "sha256": "a355469f4e89d4b074e6161cea2236ef5623502501c9ff41150941afdf8241c6",
+          "size": 1184702
+        },
+        {
+          "file": "Structory_Towers_26.2_v1.0.17.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/Structory_Towers_26.2_v1.0.17.jar",
+          "sha256": "226d8cb187e0d4fb75571db017c0abb26176aec16586c337a1b5620f3805a372",
+          "size": 491515
+        },
+        {
+          "file": "TerraBlender-neoforge-1.21.11-21.11.0.0.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/TerraBlender-neoforge-1.21.11-21.11.0.0.jar",
+          "sha256": "86364613f12433b9d427324d3ef9dae99e8602b16869e788d98b4065077f48d8",
+          "size": 124614
+        },
+        {
+          "file": "Terralith_1.21.11_v2.6.1_Neoforge.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/Terralith_1.21.11_v2.6.1_Neoforge.jar",
+          "sha256": "6e282ccf96eee11c8f86aa789ddc7cb910f344a44afb880caa62865e14132a56",
+          "size": 2977158
+        },
+        {
+          "file": "[1.21.11] SecurityCraft v1.10.2.1.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/%5B1.21.11%5D%20SecurityCraft%20v1.10.2.1.jar",
+          "sha256": "11db76687b87e8e8128ca8a20b9f6c28e407bb29f6ddf836ccca05811a6cee40",
+          "size": 5485545
+        },
+        {
+          "file": "aquariuslibs-1.2.0-neoforge-1.21.11-21.11.17-b.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/aquariuslibs-1.2.0-neoforge-1.21.11-21.11.17-b.jar",
+          "sha256": "b3a960b6a37a576b298585b801108cfd17db094f636d815bd2c00cbeef8d39fb",
+          "size": 234883
+        },
+        {
+          "file": "architectury-19.0.1-neoforge.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/architectury-19.0.1-neoforge.jar",
+          "sha256": "ce3e44b04edf63bde1d92b8b667eefb771c723bedcbf984426b3c3e1a68ae42d",
+          "size": 562565
+        },
+        {
+          "file": "artifacts-neoforge-14.0.2.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/artifacts-neoforge-14.0.2.jar",
+          "sha256": "ce7b5cb4abf2dd3c9af23579e4dbe0a429e774975292c9ecbc27b934253deb15",
+          "size": 1032227
+        },
+        {
+          "file": "balm-neoforge-1.21.11-21.11.9.1.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/balm-neoforge-1.21.11-21.11.9.1.jar",
+          "sha256": "af4993fd006b6f06f263a8e1233c0a799e79922edcb97f0af96829d9f29a48fc",
+          "size": 802614
+        },
+        {
+          "file": "chat_heads-1.2.4-neoforge-1.21.11.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/chat_heads-1.2.4-neoforge-1.21.11.jar",
+          "sha256": "c2d3e9963493eca1d64f4803add83caacb7f767d95e35a0a124053884b4a3c8f",
+          "size": 97568
+        },
+        {
+          "file": "cleanswing-1.9-1.21.11.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/cleanswing-1.9-1.21.11.jar",
+          "sha256": "0219e6b5aafd609b833f27cab3946c76a737e8f47fd2094c01849b875c41732d",
+          "size": 8446
+        },
+        {
+          "file": "cloth-config-21.11.153-neoforge.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/cloth-config-21.11.153-neoforge.jar",
+          "sha256": "cf0d6218092579491c4006b98e1ee749c16a724998ba4ab8bc6f7bfa75b25bc5",
+          "size": 1157748
+        },
+        {
+          "file": "collective-1.21.11-8.32.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/collective-1.21.11-8.32.jar",
+          "sha256": "12a2939ff79da6f4dcfc8870a243995554acf868ef8b5fd604ccd0ddb5f5d0c3",
+          "size": 1046147
+        },
+        {
+          "file": "corpse-neoforge-1.21.11-1.1.16.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/corpse-neoforge-1.21.11-1.1.16.jar",
+          "sha256": "d0d9a0db8f4d4224f89ae7a2c0612a1a990ecc8a3d796188df7ee7fbd41bb10a",
+          "size": 253928
+        },
+        {
+          "file": "cristellib-neoforge-1.21.11-3.1.7.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/cristellib-neoforge-1.21.11-3.1.7.jar",
+          "sha256": "fbf52849a14a52c106c321e309899d959bcdefe34d6a20323cc1598e88c29bba",
+          "size": 584662
+        },
+        {
+          "file": "cupboard-1.21.11-3.5.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/cupboard-1.21.11-3.5.jar",
+          "sha256": "69defaf48d5c83405074f39b250a985722593ab7e1f0bc31a2376bb07f826d43",
+          "size": 30545
+        },
+        {
+          "file": "curios-neoforge-14.0.0+1.21.11.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/curios-neoforge-14.0.0%2B1.21.11.jar",
+          "sha256": "e42512164dc4b00fe1ec180700b49e2aaff319fd6a1280f230e0418cf71bda1d",
+          "size": 438685
+        },
+        {
+          "file": "dynamiclights-1.21.11.1NF.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/dynamiclights-1.21.11.1NF.jar",
+          "sha256": "62a4fcdebff46c097a9d0ada1cd8a0adcac288bd774b45095d44df574db2bf58",
+          "size": 47456
+        },
+        {
+          "file": "elevatorid-neoforge-1.21.11-1.15.0.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/elevatorid-neoforge-1.21.11-1.15.0.jar",
+          "sha256": "20d02ab7485db0492a67c0d98b4371416569f6eb2b8c8349b6afd6ee4c3f84da",
+          "size": 196640
+        },
+        {
+          "file": "elytraslot-neoforge-1.21.11-1.0.0.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/elytraslot-neoforge-1.21.11-1.0.0.jar",
+          "sha256": "06df0e110a3a9ea25e5a8f5807bf9cf7838cc3a326e17098ef2306f2fa2c6052",
+          "size": 49786
+        },
+        {
+          "file": "enchdesc-neoforge-1.21.11-21.11.1.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/enchdesc-neoforge-1.21.11-21.11.1.jar",
+          "sha256": "e072c35813d22ea48c0ccc8a8acbe382352c4d351dbca2ae07dd278c7547d793",
+          "size": 81115
+        },
+        {
+          "file": "endrem-neoforge-1.21.11-6.1.6.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/endrem-neoforge-1.21.11-6.1.6.jar",
+          "sha256": "8e3414b4da777c7eaa9a689b155c05970c119effd652c580623ead301d5e95ae",
+          "size": 936356
+        },
+        {
+          "file": "formations-1.0.4-neoforge-mc1.21.11.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/formations-1.0.4-neoforge-mc1.21.11.jar",
+          "sha256": "ef560aa4efff80eca31b3230497669a4a8f73a5de305f81e0bbc8104ba11c955",
+          "size": 290445
+        },
+        {
+          "file": "formationsnether-1.0.5a-mc1.21+.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/formationsnether-1.0.5a-mc1.21%2B.jar",
+          "sha256": "a9f196053c2a7706d7ce938cfa27b80299755898c58e585c2d8a25050ad98808",
+          "size": 941764
+        },
+        {
+          "file": "framework-neoforge-1.21.11-0.13.11.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/framework-neoforge-1.21.11-0.13.11.jar",
+          "sha256": "8c369b61d0badbe5029aef34c38e6d061d1e0541d2c745b38d7cd0b347d8a10a",
+          "size": 437672
+        },
+        {
+          "file": "immersive_aircraft-1.4.7+1.21.11-neoforge.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/immersive_aircraft-1.4.7%2B1.21.11-neoforge.jar",
+          "sha256": "e00ad79561a2d1db8520b4b23cfd0eab6b86f1d125fe2141f7dfb3c62996f573",
+          "size": 2471757
+        },
+        {
+          "file": "iris-neoforge-1.10.7+mc1.21.11.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/iris-neoforge-1.10.7%2Bmc1.21.11.jar",
+          "sha256": "a18f8e1977f3c0b7b62884a771ed74286b4fda7bc056726f76acec4fc3def2b6",
+          "size": 2748132
+        },
+        {
+          "file": "jamlib-neoforge-2.0.0+1.21.11.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/jamlib-neoforge-2.0.0%2B1.21.11.jar",
+          "sha256": "40b1231f36cf941ad032309c9c79eeb6a162c1c418608a55f1a9577466164d7a",
+          "size": 226815
+        },
+        {
+          "file": "justzoom_neoforge_2.1.3_MC_1.21.11.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/justzoom_neoforge_2.1.3_MC_1.21.11.jar",
+          "sha256": "f679a0ffb2ef75c7a1f5c60678dfd22fe30f0966fb5db2e63d222460584daa82",
+          "size": 65498
+        },
+        {
+          "file": "konkrete_neoforge_1.9.18_MC_1.21.11.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/konkrete_neoforge_1.9.18_MC_1.21.11.jar",
+          "sha256": "0417847478c094d1a4e464dc4b570b8fb8c9ba24d79273d037caec29bdb7affd",
+          "size": 579885
+        },
+        {
+          "file": "lithostitched-1.7.2-neoforge-21.11.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/lithostitched-1.7.2-neoforge-21.11.jar",
+          "sha256": "47188261792611d993930c43f5d794d857b18292cf6ec878d6b005a54918ff85",
+          "size": 828510
+        },
+        {
+          "file": "lootintegrations-1.21.11-4.8.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/lootintegrations-1.21.11-4.8.jar",
+          "sha256": "f3939013ba2b54e7e254464269acc0186780009fcce216d8eb2f56346296c0e6",
+          "size": 37455
+        },
+        {
+          "file": "mcw-bridges-3.1.2-mc1.21.11neoforge.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/mcw-bridges-3.1.2-mc1.21.11neoforge.jar",
+          "sha256": "5003deacdbb8e9d50665e8959d01f76eed6e0105f5b4d6aaf3cbaa25bf6595e6",
+          "size": 676837
+        },
+        {
+          "file": "mcw-doors-1.1.5-mc1.21.11neoforge.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/mcw-doors-1.1.5-mc1.21.11neoforge.jar",
+          "sha256": "01d64c657c5bef5ab179859babcbd23f5afa1a98c052919717925f12a561f4d1",
+          "size": 1349053
+        },
+        {
+          "file": "mcw-fences-1.2.1-mc1.21.11neoforge.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/mcw-fences-1.2.1-mc1.21.11neoforge.jar",
+          "sha256": "1ca3d558fed72559ac1c8ea9923207f80f340675fb1226489c5cfb618b8533c6",
+          "size": 697604
+        },
+        {
+          "file": "mcw-furniture-3.4.2-mc1.21.11neoforge.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/mcw-furniture-3.4.2-mc1.21.11neoforge.jar",
+          "sha256": "0e9f487734e2fa8f21efe1592f1bf9e8ea6eaa2347df6b197e1e0f4ea28e686f",
+          "size": 2271043
+        },
+        {
+          "file": "mcw-holidays-1.1.2-mc1.21.11neoforge.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/mcw-holidays-1.1.2-mc1.21.11neoforge.jar",
+          "sha256": "5af1c70122a37dcb8d855b6a4bcdfac1bad01809554e2f2b2010de7cdbec568a",
+          "size": 1035202
+        },
+        {
+          "file": "mcw-lights-1.1.5-mc1.21.11neoforge.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/mcw-lights-1.1.5-mc1.21.11neoforge.jar",
+          "sha256": "b21968690f445fb064763da802c79a4633ec93e9cb279a462677f76cbffe5ff7",
+          "size": 533561
+        },
+        {
+          "file": "mcw-paths-1.1.1-mc1.21.11neoforge.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/mcw-paths-1.1.1-mc1.21.11neoforge.jar",
+          "sha256": "fa972b944d141001a16759792c340839fee74621cf95dabcd69580303c82d203",
+          "size": 785819
+        },
+        {
+          "file": "mcw-roofs-2.3.2-mc1.21.11neoforge.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/mcw-roofs-2.3.2-mc1.21.11neoforge.jar",
+          "sha256": "2398e8cb100675714311e89eb7c042397082e32e158e46493d5c31be4879b50d",
+          "size": 1829439
+        },
+        {
+          "file": "mcw-stairs-1.0.2-mc1.21.11neoforge.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/mcw-stairs-1.0.2-mc1.21.11neoforge.jar",
+          "sha256": "82fe003898ed7c7cdfe7d51ef5d09b4a323569041c2ce3862869fb2a4983dde8",
+          "size": 548828
+        },
+        {
+          "file": "mcw-trapdoors-1.1.5-mc1.21.11neoforge.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/mcw-trapdoors-1.1.5-mc1.21.11neoforge.jar",
+          "sha256": "ab50ac9e4493bf4edc4bddd9c01edff0d08197a2554614c0f2be1fd4dcb0fbed",
+          "size": 621947
+        },
+        {
+          "file": "mcw-windows-2.4.2-mc1.21.11neoforge.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/mcw-windows-2.4.2-mc1.21.11neoforge.jar",
+          "sha256": "9cf3250127d153f8bee51b7b7632d5d7c763d88fa5802b94e4a11f42173f029d",
+          "size": 1324793
+        },
+        {
+          "file": "moogs_structures-neoforge-1.21.11-3.0.2.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/moogs_structures-neoforge-1.21.11-3.0.2.jar",
+          "sha256": "8ecf1e835225e102250e8600154cdb7ebecefc176fb8c96c9021d95e6776db4d",
+          "size": 339787
+        },
+        {
+          "file": "notenoughanimations-neoforge-1.12.4-mc1.21.11.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/notenoughanimations-neoforge-1.12.4-mc1.21.11.jar",
+          "sha256": "37643a0dfb8d74959283b855e0cfeb830a554e63b6d3de1d62079d6aa4ddb28a",
+          "size": 1950060
+        },
+        {
+          "file": "pisceslibs-1.0.1-neoforge-1.21.11.42.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/pisceslibs-1.0.1-neoforge-1.21.11.42.jar",
+          "sha256": "1338ffa573d1cfa8840429f85de4bb4f4716316e38d7e8499cb414dc90b66904",
+          "size": 31579
+        },
+        {
+          "file": "prickle-neoforge-1.21.11-21.11.1.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/prickle-neoforge-1.21.11-21.11.1.jar",
+          "sha256": "474ecacd25a6263739eb9a433d8a4818a53b46135b3822956438f6d9c4302cd6",
+          "size": 84801
+        },
+        {
+          "file": "refurbished_furniture-neoforge-1.21.11-1.0.23.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/refurbished_furniture-neoforge-1.21.11-1.0.23.jar",
+          "sha256": "b368fd07f2f3aecc729392e31fdca9565a013b086495b9d88d4d09403df143e5",
+          "size": 7314003
+        },
+        {
+          "file": "rightclickharvest-neoforge-4.6.1+1.21.11.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/rightclickharvest-neoforge-4.6.1%2B1.21.11.jar",
+          "sha256": "4b2058e68aa3cb0dd2d7c19fd62795809c7667b4560cc55b2105807999dcb3a9",
+          "size": 288410
+        },
+        {
+          "file": "skinrestorer-2.9.0+1.21.11-neoforge.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/skinrestorer-2.9.0%2B1.21.11-neoforge.jar",
+          "sha256": "b04603804a04892dcbdfdd84ef1a1683e2fb04def10c96dc0a6dd9dbd7a302e3",
+          "size": 257064
+        },
+        {
+          "file": "sodium-neoforge-0.8.13+mc1.21.11.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/sodium-neoforge-0.8.13%2Bmc1.21.11.jar",
+          "sha256": "19efa5d5e45f25f65e1c7b1671cac2d5ce92679c2a20f450f4a6dc157abba0b9",
+          "size": 1137415
+        },
+        {
+          "file": "sophisticatedbackpacks-1.21.11-3.25.75.1998.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/sophisticatedbackpacks-1.21.11-3.25.75.1998.jar",
+          "sha256": "712291347303466f472d37911de1f854f5c2e23a0bab599d5eea84ed7226b5bf",
+          "size": 1161206
+        },
+        {
+          "file": "sophisticatedcore-1.21.11-1.4.82.2171.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/sophisticatedcore-1.21.11-1.4.82.2171.jar",
+          "sha256": "df4c50b5aae97270bb5c1c8434e1e938aebdc5f40362a036095458a3fa8fc926",
+          "size": 1779319
+        },
+        {
+          "file": "supermartijn642corelib-1.1.21-neoforge-mc1.21.11.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/supermartijn642corelib-1.1.21-neoforge-mc1.21.11.jar",
+          "sha256": "5367a28d96a6241994713afce715bdc75476ec0670817a61bb40e19f8c76a56d",
+          "size": 605463
+        },
+        {
+          "file": "t_and_t-fabric-neoforge-1.13.9.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/t_and_t-fabric-neoforge-1.13.9.jar",
+          "sha256": "70a14d6957e9e59dad9b818d05a3b6800284eec756fff09430173fb692993527",
+          "size": 3507359
+        },
+        {
+          "file": "tectonic-3.0.19-neoforge-1.21.11.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/tectonic-3.0.19-neoforge-1.21.11.jar",
+          "sha256": "3f6880f5e8fe43463bcc002844dcad174ce08d21bce0564087ea24cb6ea12016",
+          "size": 325265
+        },
+        {
+          "file": "trashslot-neoforge-1.21.11-21.11.5.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/trashslot-neoforge-1.21.11-21.11.5.jar",
+          "sha256": "5c8d3f8c2ce7976a2225782caced8b01332cd3d2f553ebddd4eaceccd27089b5",
+          "size": 78376
+        },
+        {
+          "file": "villagernames-1.21.11-8.5.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/villagernames-1.21.11-8.5.jar",
+          "sha256": "616942f6652f10e910f1fdf13d9a60813ad25d8a4103e6f346083f9412e7c7cc",
+          "size": 79983
+        },
+        {
+          "file": "voicechat-neoforge-1.21.11-2.6.20.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/voicechat-neoforge-1.21.11-2.6.20.jar",
+          "sha256": "8cfe3cce08fd915038f03473ad5117d8260ab9ce2e55811dc653d14879c21f2b",
+          "size": 4911133
+        },
+        {
+          "file": "weaponsofjapan-1.0.0-neoforge-1.21.11.42.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/weaponsofjapan-1.0.0-neoforge-1.21.11.42.jar",
+          "sha256": "a6f506ad960ef4faef798f696640f4f22a5fec3a96128a41c7799c9f753bbef5",
+          "size": 254867
+        },
+        {
+          "file": "xaerominimap-neoforge-1.21.11-26.4.2.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/xaerominimap-neoforge-1.21.11-26.4.2.jar",
+          "sha256": "464aa2b63e800fa3d63d89bad94f15ad13989c1fcfd2d9ae077d3e4b3b134992",
+          "size": 2165835
+        },
+        {
+          "file": "xaeroworldmap-neoforge-1.21.11-1.44.2.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/1.21.11/xaeroworldmap-neoforge-1.21.11-1.44.2.jar",
+          "sha256": "f6bb49ad16030ce5c763b8b95e2a0d6380bc014d9fc3e293c8588b9e76b42a2f",
+          "size": 1437872
+        }
+      ]
+    }
+  }
+}
