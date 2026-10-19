@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import hashlib
 import sys
 import threading
 import zipfile
@@ -73,6 +74,10 @@ GREEN = (0, 168, 89, 240)
 # ======================================================================
 MANIFEST_URL = "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/manifest.json"
 EXIGIR_ACTUALIZACION = True
+
+# Versión de ESTE launcher. Se compara con la publicada en el manifest.
+# (publicar_launcher.py la sube solo cuando le pasas un número nuevo)
+APP_VERSION = "1.0.1"
 
 
 class Cancelado(Exception):
@@ -536,11 +541,15 @@ class RancioLaunch(ctk.CTk):
     def cargar_versiones_publicadas(self):
         """Reemplaza la lista fija de versiones por las que hay publicadas en el manifest."""
         try:
-            versiones = list(modsync.obtener_manifest(MANIFEST_URL, timeout=8).get("versions", {}).keys())
+            manifest = modsync.obtener_manifest(MANIFEST_URL, timeout=8)
         except Exception:
             return  # sin internet: se queda la lista fija
-        if not versiones:
-            return
+        versiones = list(manifest.get("versions", {}).keys())
+        if versiones:
+            self.mostrar_versiones(versiones)
+        self.revisar_actualizacion_launcher(manifest.get("launcher"))
+
+    def mostrar_versiones(self, versiones):
         versiones.sort(key=lambda v: [int(x) if x.isdigit() else 0 for x in v.split(".")], reverse=True)
 
         def aplicar():
@@ -550,6 +559,95 @@ class RancioLaunch(ctk.CTk):
             self.set_version(versiones[0])
 
         self.after(0, aplicar)
+
+    # ------------------------------------------------------------------
+    # AUTO-ACTUALIZACIÓN DEL LAUNCHER
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _tupla_version(v):
+        return tuple(int(x) if x.isdigit() else 0 for x in str(v).strip().lstrip("vV").split("."))
+
+    def revisar_actualizacion_launcher(self, info):
+        """Si el manifest trae un launcher más nuevo, ofrece descargarlo e instalarlo."""
+        if not info or not getattr(sys, "frozen", False) or sys.platform != "win32":
+            return  # solo tiene sentido en el .exe de Windows
+        try:
+            if self._tupla_version(info["version"]) <= self._tupla_version(APP_VERSION):
+                return
+            info["url"]
+        except Exception:
+            return
+        ok = self.preguntar(
+            "Actualización del launcher",
+            f"Hay una versión nueva de RancioLaunch ({info['version']}).\n"
+            f"Tú tienes la {APP_VERSION}.\n\n"
+            "¿Actualizar ahora? El launcher se reiniciará solo.",
+        )
+        if not ok:
+            return
+        self.set_jugando(True)
+        try:
+            self.aplicar_actualizacion_launcher(info)
+        except Exception as e:
+            traceback.print_exc()
+            self.actualizar_estado(f"No se pudo actualizar: {str(e)[:20]}")
+            self.after(0, lambda: self.dibujar_progreso(0))
+            self.set_jugando(False)
+
+    def aplicar_actualizacion_launcher(self, info):
+        exe = sys.executable
+        nuevo = exe + ".nuevo"
+        self.actualizar_estado("Descargando actualización...")
+        h = hashlib.sha256()
+        with requests.get(info["url"], stream=True, timeout=30) as r:
+            r.raise_for_status()
+            largo = int(r.headers.get("content-length", 0)) or int(info.get("size", 0))
+            leido = 0
+            with open(nuevo, "wb") as f:
+                for bloque in r.iter_content(chunk_size=1024 * 64):
+                    if not bloque:
+                        continue
+                    f.write(bloque)
+                    h.update(bloque)
+                    leido += len(bloque)
+                    if largo:
+                        v = min(leido / largo, 1.0)
+                        self.after(0, lambda v=v: self.dibujar_progreso(v))
+
+        esperado = info.get("sha256")
+        if esperado and h.hexdigest().lower() != esperado.lower():
+            os.remove(nuevo)
+            raise RuntimeError("descarga corrupta")
+
+        # Un .exe no se puede reemplazar mientras corre: un script espera a que
+        # este proceso termine, cambia el archivo y vuelve a abrir el launcher.
+        self.actualizar_estado("Reiniciando...")
+        bat = os.path.join(os.environ.get("TEMP", os.path.dirname(exe)), "rancio_actualizar.bat")
+        with open(bat, "w", encoding="utf-8", newline="\r\n") as f:
+            f.write(
+                "@echo off\n"
+                "chcp 65001 >nul\n"
+                "set n=0\n"
+                ":espera\n"
+                "set /a n+=1\n"
+                "if %n% GTR 40 goto fin\n"
+                "ping -n 2 127.0.0.1 >nul\n"
+                f'move /Y "{nuevo}" "{exe}" >nul 2>&1\n'
+                "if errorlevel 1 goto espera\n"
+                f'start "" "{exe}"\n'
+                ":fin\n"
+                'del "%~f0"\n'
+            )
+        # Entorno limpio para que el exe nuevo (PyInstaller onefile) no reutilice
+        # la carpeta temporal de este proceso, que va a desaparecer.
+        env = {k: v for k, v in os.environ.items() if not k.startswith("_PYI") and k != "_MEIPASS2"}
+        env["PYINSTALLER_RESET_ENVIRONMENT"] = "1"
+        subprocess.Popen(
+            ["cmd", "/c", bat], env=env, close_fds=True,
+            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            creationflags=subprocess.CREATE_NO_WINDOW | subprocess.DETACHED_PROCESS,
+        )
+        self.after(0, self.destroy)
 
     def actualizar_estado(self, texto, codigo=None):
         def _actualizar():
@@ -704,6 +802,26 @@ class RancioLaunch(ctk.CTk):
             ml.install(mc, carpeta, loader_version=lv, callback=callback, java=java)
         return vid
 
+    def asegurar_java(self, mc, callback):
+        """Devuelve la ruta del Java que usa Minecraft, instalándolo si falta.
+        Así el launcher no depende de que el usuario tenga Java en el PATH."""
+        mld = minecraft_launcher_lib
+        carpeta = self.minecraft_directory
+        try:
+            info = mld.runtime.get_version_runtime_information(mc, carpeta)
+            if not info:
+                return None
+            nombre = info["name"]
+            ruta = mld.runtime.get_executable_path(nombre, carpeta)
+            if not ruta or not os.path.exists(ruta):
+                self.actualizar_estado("Instalando Java...")
+                mld.runtime.install_jvm_runtime(nombre, carpeta, callback=callback)
+                ruta = mld.runtime.get_executable_path(nombre, carpeta)
+            return ruta if ruta and os.path.exists(ruta) else None
+        except Exception as e:
+            print(f"No se pudo preparar Java: {e}")
+            return None
+
     def sincronizar_mods(self, entrada, mods_dir):
         plan = modsync.planificar(entrada.get("mods", []), mods_dir)
         if not plan.hay_cambios:
@@ -771,6 +889,11 @@ class RancioLaunch(ctk.CTk):
             loader = (entrada or {}).get("loader", "vanilla")
             version_id = self.instalar_version(mc, loader, (entrada or {}).get("loader_version"), callback)
 
+            # Java propio de Minecraft (no depende del Java del sistema)
+            java_path = self.asegurar_java(mc, callback)
+            if java_path:
+                options["executablePath"] = java_path
+
             # 4. Mods
             if entrada:
                 self.sincronizar_mods(entrada, mods_dir)
@@ -781,7 +904,14 @@ class RancioLaunch(ctk.CTk):
                 version_id, self.minecraft_directory, options
             )
             self.after(0, self.iconify)
-            subprocess.call(comando, cwd=game_dir)
+            extra = {}
+            if sys.platform == "win32":
+                extra["creationflags"] = subprocess.CREATE_NO_WINDOW  # sin ventana de consola
+            subprocess.call(
+                comando, cwd=game_dir,
+                stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                **extra
+            )
             self.after(0, self.deiconify)
             self.actualizar_estado("Listo para jugar")
 

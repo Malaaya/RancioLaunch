@@ -39,6 +39,15 @@ def main():
         sys.exit(1)
     base = sys.argv[1].rstrip("/")
     manifest = {"versions": {}}
+    _previo = os.path.join(RAIZ, "manifest.json")
+    if os.path.isfile(_previo):  # conserva los datos del launcher publicados antes
+        try:
+            with open(_previo, encoding="utf-8") as _f:
+                _l = json.load(_f).get("launcher")
+            if _l:
+                manifest["launcher"] = _l
+        except Exception:
+            pass
 
     for version in sorted(os.listdir(RAIZ)):
         carpeta = os.path.join(RAIZ, version)
