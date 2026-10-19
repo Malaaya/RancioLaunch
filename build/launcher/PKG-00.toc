@@ -1,4 +1,4 @@
-('D:\\RancioLaunch\\build\\launcher\\launcher.pkg',
+('D:\\RancioLaunch\\build\\launcher\\RancioLaunch.pkg',
  {'BINARY': True,
   'DATA': True,
   'EXECUTABLE': True,
