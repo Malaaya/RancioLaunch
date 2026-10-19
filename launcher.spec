@@ -1,7 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all
 
-datas = [('nahuel.jpg', '.'), ('teto.jpg', '.')]
+datas = [('nahuel.jpg', '.'), ('teto.jpg', '.'), ('tetotransparente.png', '.')]
 binaries = []
 hiddenimports = []
 tmp_ret = collect_all('minecraft_launcher_lib')

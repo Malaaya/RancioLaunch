@@ -5,6 +5,7 @@ Uso (desde la carpeta RancioLaunch):
 
 La primera vez te pregunta la carpeta de mods, la versión de Minecraft y el loader,
 y lo guarda en publicar_config.json. Las siguientes veces solo corre y listo.
+Loaders válidos: fabric, forge, neoforge, quilt, vanilla.
 Para cambiar algo: python publicar.py --reconfigurar
 
 Qué hace: copia tus .jar a publicar/<versión>/, regenera manifest.json (con hashes)
@@ -24,6 +25,7 @@ AQUI = os.path.dirname(os.path.abspath(__file__))
 RAIZ = os.path.join(AQUI, "publicar")
 CONFIG = os.path.join(AQUI, "publicar_config.json")
 LIMITE_GITHUB_MB = 95
+LOADERS = {"vanilla", "fabric", "forge", "neoforge", "quilt"}
 
 
 def git(*args):
@@ -46,7 +48,11 @@ def configurar():
     print("--- Configuración (se guarda en publicar_config.json) ---")
     carpeta = input("Carpeta con tus mods (ruta completa): ").strip().strip('"')
     version = input("Versión de Minecraft (ej. 1.20.1): ").strip()
-    loader = input("Loader (fabric / forge / vanilla): ").strip().lower() or "fabric"
+    while True:
+        loader = input("Loader (fabric / forge / neoforge / quilt / vanilla): ").strip().lower() or "fabric"
+        if loader in LOADERS:
+            break
+        print(f"  '{loader}' no es válido, escribe uno de: {', '.join(sorted(LOADERS))}")
     cfg = {"carpeta_mods": carpeta, "version": version, "loader": loader}
     with open(CONFIG, "w", encoding="utf-8") as f:
         json.dump(cfg, f, indent=2, ensure_ascii=False)
@@ -109,6 +115,8 @@ def generar_manifest(base):
 def main():
     cfg = cargar_config()
     origen = cfg["carpeta_mods"]
+    if cfg.get("loader") not in LOADERS:
+        sys.exit(f"Loader inválido en publicar_config.json: '{cfg.get('loader')}'. Usa --reconfigurar.")
     if not os.path.isdir(origen):
         sys.exit(f"No existe la carpeta: {origen}  (usa --reconfigurar)")
 

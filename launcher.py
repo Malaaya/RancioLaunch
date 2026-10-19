@@ -62,7 +62,7 @@ GREEN = (0, 168, 89, 240)
 # ======================================================================
 # CONFIGURACIÓN: mods
 # ======================================================================
-MANIFEST_URL = "https://raw.githubusercontent.com/TU-USUARIO/TU-REPO/main/publicar/manifest.json"
+MANIFEST_URL = "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/manifest.json"
 EXIGIR_ACTUALIZACION = True
 
 
@@ -221,6 +221,7 @@ class RancioLaunch(ctk.CTk):
         self.menu = tk.Menu(self, tearoff=0, font=("Segoe UI", 11))
         for v in VERSIONS:
             self.menu.add_command(label=v, command=lambda v=v: self.set_version(v))
+        self.after(300, lambda: threading.Thread(target=self.cargar_versiones_publicadas, daemon=True).start())
 
         # --- Estado y progreso (encima de JUGAR AHORA) ---
         self.status_t = self.texto(450, STATUS_Y, "Listo para jugar", 10, True)
@@ -338,6 +339,24 @@ class RancioLaunch(ctk.CTk):
         self.version = v
         self.set_texto(self.version_t, v)
 
+    def cargar_versiones_publicadas(self):
+        """Reemplaza la lista fija de versiones por las que hay publicadas en el manifest."""
+        try:
+            versiones = list(modsync.obtener_manifest(MANIFEST_URL, timeout=8).get("versions", {}).keys())
+        except Exception:
+            return  # sin internet: se queda la lista fija
+        if not versiones:
+            return
+        versiones.sort(key=lambda v: [int(x) if x.isdigit() else 0 for x in v.split(".")], reverse=True)
+
+        def aplicar():
+            self.menu.delete(0, "end")
+            for v in versiones:
+                self.menu.add_command(label=v, command=lambda v=v: self.set_version(v))
+            self.set_version(versiones[0])
+
+        self.after(0, aplicar)
+
     def actualizar_estado(self, texto, codigo=None):
         def _actualizar():
             self.set_texto(self.status_t, texto)
@@ -436,36 +455,60 @@ class RancioLaunch(ctk.CTk):
         listo.wait()
         return resp["v"]
 
+    @staticmethod
+    def _es_del_loader(vid, loader, mc):
+        """Para uso sin internet: ¿este id de versión instalada corresponde a loader + mc?"""
+        if loader in ("fabric", "quilt"):
+            return vid.startswith(f"{loader}-loader-") and vid.endswith("-" + mc)
+        if loader == "forge":
+            return vid.startswith(f"{mc}-forge-")
+        if loader == "neoforge":
+            # NeoForge numera por versión de MC: 1.21.11 -> 21.11.x
+            partes = mc.split(".", 1)
+            return len(partes) == 2 and vid.startswith("neoforge-" + partes[1] + ".")
+        return False
+
     def instalar_version(self, mc, loader, loader_version, callback):
+        """Instala MC (+ fabric/forge/neoforge/quilt si toca) y devuelve el id a lanzar."""
         mld = minecraft_launcher_lib
         carpeta = self.minecraft_directory
+        loader = (loader or "vanilla").lower()
         instaladas = lambda: {v["id"] for v in mld.utils.get_installed_versions(carpeta)}
 
-        if loader == "fabric":
-            try:
-                lv = loader_version or mld.fabric.get_latest_loader_version()
-            except Exception:
-                for vid in instaladas():
-                    if vid.startswith("fabric-loader-") and vid.endswith("-" + mc):
-                        return vid
-                raise
-            vid = f"fabric-loader-{lv}-{mc}"
-            if vid not in instaladas():
-                mld.fabric.install_fabric(mc, carpeta, loader_version=lv, callback=callback)
-            return vid
-
-        if loader == "forge":
-            fv = loader_version or mld.forge.find_forge_version(mc)
-            if not fv:
-                raise RuntimeError(f"No hay Forge para {mc}")
-            vid = mld.forge.forge_to_installed_version(fv)
-            if vid not in instaladas():
-                mld.forge.install_forge_version(fv, carpeta, callback=callback)
-            return vid
-
+        # Siempre primero el Minecraft vanilla (también deja listo el Java que necesita)
         if mc not in instaladas():
             mld.install.install_minecraft_version(mc, carpeta, callback=callback)
-        return mc
+        if loader == "vanilla":
+            return mc
+
+        if not hasattr(mld, "mod_loader"):
+            raise RuntimeError("Actualiza la librería: python -m pip install -U minecraft-launcher-lib")
+        if loader not in mld.mod_loader.list_mod_loader():
+            raise RuntimeError(f"Loader desconocido: '{loader}'")
+
+        ml = mld.mod_loader.get_mod_loader(loader)
+        try:
+            lv = loader_version or ml.get_latest_loader_version(mc)
+        except Exception:
+            # sin internet o sin versión: usa uno ya instalado si existe
+            for vid in sorted(instaladas(), reverse=True):
+                if self._es_del_loader(vid, loader, mc):
+                    return vid
+            raise
+
+        vid = ml.get_installed_version(mc, lv)
+        if vid not in instaladas():
+            # El instalador de Forge/NeoForge necesita Java: usa el que trae Minecraft
+            java = None
+            try:
+                info = mld.runtime.get_version_runtime_information(mc, carpeta)
+                if info:
+                    java = mld.runtime.get_executable_path(info["name"], carpeta)
+            except Exception:
+                pass
+            self.actualizar_estado(f"Instalando {loader}...")
+            ml.install(mc, carpeta, loader_version=lv, callback=callback, java=java)
+        return vid
 
     def sincronizar_mods(self, entrada, mods_dir):
         plan = modsync.planificar(entrada.get("mods", []), mods_dir)
