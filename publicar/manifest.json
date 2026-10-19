@@ -510,5 +510,11 @@
         }
       ]
     }
+  },
+  "launcher": {
+    "version": "1.0.1",
+    "url": "https://github.com/Malaaya/RancioLaunch/releases/download/v1.0.1/RancioLaunch.exe",
+    "sha256": "7c98e15a0c0956c440f9571efb29bb42c507eeb572adb909c0e59f2d02bd8ba0",
+    "size": 35220347
   }
 }
