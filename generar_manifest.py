@@ -3,13 +3,20 @@
 Estructura esperada (carpeta 'publicar' junto a este script):
 
     publicar/
-      1.20.1/
-        loader.txt        <- una línea: fabric | forge | vanilla  (opcional: "fabric 0.15.11")
-        sodium.jar
-        lithium.jar
-      1.16.5/
-        loader.txt
-        ...
+        1.21.11/                <- nombre de la carpeta = versión de Minecraft
+            loader.txt          <- ver formato abajo
+            sodium.jar
+            lithium.jar
+        26.3/
+            loader.txt
+            ...
+
+Formato de loader.txt (una cosa por línea, todo opcional salvo la primera):
+
+    neoforge                    <- loader: fabric | forge | neoforge | quilt | vanilla
+    nombre=Randomizer           <- nombre que se ve en el selector del launcher
+
+    (si quieres fijar la versión exacta del loader: "neoforge 26.3.0.39-beta")
 
 Uso:
     python generar_manifest.py https://raw.githubusercontent.com/USUARIO/REPO/main/publicar
@@ -33,19 +40,39 @@ def sha256(ruta):
     return h.hexdigest()
 
 
-def main():
-    if len(sys.argv) != 2:
-        print(__doc__)
-        sys.exit(1)
-    base = sys.argv[1].rstrip("/")
+def leer_loader_txt(ruta):
+    """Devuelve (loader, loader_version, nombre) leyendo loader.txt."""
+    loader, loader_version, nombre = "vanilla", None, None
+    if not os.path.isfile(ruta):
+        return loader, loader_version, nombre
+    with open(ruta, encoding="utf-8") as f:
+        for linea in f:
+            linea = linea.strip()
+            if not linea or linea.startswith("#"):
+                continue
+            if "=" in linea:
+                clave, valor = linea.split("=", 1)
+                if clave.strip().lower() in ("nombre", "name"):
+                    nombre = valor.strip() or None
+                continue
+            partes = linea.split()
+            loader = partes[0].lower()
+            if len(partes) > 1:
+                loader_version = partes[1]
+    return loader, loader_version, nombre
+
+
+def generar_manifest(base):
+    """Recorre publicar/<versión>/ y escribe publicar/manifest.json."""
     manifest = {"versions": {}}
-    _previo = os.path.join(RAIZ, "manifest.json")
-    if os.path.isfile(_previo):  # conserva los datos del launcher publicados antes
+
+    previo = os.path.join(RAIZ, "manifest.json")
+    if os.path.isfile(previo):   # conserva los datos del launcher publicados antes
         try:
-            with open(_previo, encoding="utf-8") as _f:
-                _l = json.load(_f).get("launcher")
-            if _l:
-                manifest["launcher"] = _l
+            with open(previo, encoding="utf-8") as f:
+                datos_launcher = json.load(f).get("launcher")
+            if datos_launcher:
+                manifest["launcher"] = datos_launcher
         except Exception:
             pass
 
@@ -54,14 +81,7 @@ def main():
         if not os.path.isdir(carpeta):
             continue
 
-        loader, loader_version = "vanilla", None
-        txt = os.path.join(carpeta, "loader.txt")
-        if os.path.isfile(txt):
-            partes = open(txt, encoding="utf-8").read().split()
-            if partes:
-                loader = partes[0].lower()
-            if len(partes) > 1:
-                loader_version = partes[1]
+        loader, loader_version, nombre = leer_loader_txt(os.path.join(carpeta, "loader.txt"))
 
         mods = []
         for f in sorted(os.listdir(carpeta)):
@@ -75,17 +95,26 @@ def main():
                 "size": os.path.getsize(ruta),
             })
 
-        manifest["versions"][version] = {
-            "loader": loader,
-            "loader_version": loader_version,
-            "mods": mods,
-        }
-        print(f"{version}: {loader}, {len(mods)} mods")
+        entrada = {}
+        if nombre:
+            entrada["name"] = nombre
+        entrada["loader"] = loader
+        entrada["loader_version"] = loader_version
+        entrada["mods"] = mods
+        manifest["versions"][version] = entrada
+        print(f"{version} ({nombre or 'sin nombre'}): {loader}, {len(mods)} mods")
 
     salida = os.path.join(RAIZ, "manifest.json")
     with open(salida, "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2, ensure_ascii=False)
     print(f"Listo: {salida}")
+
+
+def main():
+    if len(sys.argv) != 2:
+        print(__doc__)
+        sys.exit(1)
+    generar_manifest(sys.argv[1].rstrip("/"))
 
 
 if __name__ == "__main__":

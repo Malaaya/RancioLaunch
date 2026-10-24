@@ -10,6 +10,8 @@ import requests
 import traceback
 import webbrowser
 import ctypes
+import tempfile
+import xml.etree.ElementTree as ET
 from tkinter import messagebox
 import tkinter as tk
 from PIL import Image, ImageFilter, ImageEnhance, ImageDraw, ImageChops, ImageTk
@@ -28,21 +30,23 @@ from auth import MicrosoftAuth, AuthError
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
 
+
 # Función para encontrar archivos incrustados por PyInstaller
 def resolver_ruta_recurso(nombre_archivo):
     if hasattr(sys, '_MEIPASS'):
         return os.path.join(sys._MEIPASS, nombre_archivo)
     return os.path.join(os.path.abspath("."), nombre_archivo)
 
+
 # ======================================================================
 # AJUSTES DE APARIENCIA Y COORDENADAS
 # ======================================================================
-BLUR = 2           # Desenfoque en 2
-GLASS_ALPHA = 12    # Velo blanco del panel (0 = invisible, 255 = blanco)
-FIELD_ALPHA = 28    # Blanco en campos y botones translúcidos
-BRIGHTNESS = 1.0    # Brillo del fondo desenfocado
-BORDER_ALPHA = 130  # Brillo del borde fino del cristal
-FIELD_BORDER = 100  # Brillo del borde de campos y botones
+BLUR = 2             # Desenfoque en 2
+GLASS_ALPHA = 12     # Velo blanco del panel (0 = invisible, 255 = blanco)
+FIELD_ALPHA = 28     # Blanco en campos y botones translúcidos
+BRIGHTNESS = 1.0     # Brillo del fondo desenfocado
+BORDER_ALPHA = 130   # Brillo del borde fino del cristal
+FIELD_BORDER = 100   # Brillo del borde de campos y botones
 
 W, H = 900, 650
 CARD = (250, 55, 650, 595)
@@ -54,19 +58,32 @@ VERSION_BOX = (295, 280, 605, 322)
 # Elementos pegados a la parte inferior del recuadro
 STATUS_Y = 445
 BAR_BOX = (300, 462, 600, 468)
-
 PLAY_BOX = (295, 485, 605, 530)
 MS_BOX = (295, 538, 605, 578)
 
 # Control de RAM (debajo del selector de versión)
 RAM_LABEL_Y = 341
 SLIDER_Y = 375
-SLIDER_X0, SLIDER_X1 = 305, 485          # recorrido del centro de la perilla
-RAM_BOX = (505, 354, 605, 396)           # recuadro con el valor
-RAM_MIN = 1.0                            # GB
-RAM_STEP = 0.5                           # GB
+SLIDER_X0, SLIDER_X1 = 305, 485   # recorrido del centro de la perilla
+RAM_BOX = (505, 354, 605, 396)    # recuadro con el valor
+RAM_MIN = 1.0                     # GB
+RAM_STEP = 0.5                    # GB
 
-VERSIONS = ["1.20.1", "1.19.4", "1.16.5"]
+# ======================================================================
+# VERSIONES / PACKS QUE SE MUESTRAN EN EL SELECTOR
+# ----------------------------------------------------------------------
+# La "clave" de cada pack es el nombre de su carpeta dentro de publicar/
+# y a la vez la versión de Minecraft que se instala (ej. "26.3").
+# El nombre que ve el jugador sale de aquí, o del campo "name" del manifest
+# (que se define con nombre=... en el loader.txt de esa carpeta).
+# ======================================================================
+VERSIONS = ["1.21.11", "26.3"]    # respaldo cuando no hay internet
+NOMBRES_VERSION = {
+    "1.21.11": "MundoRancio",
+    "26.3": "Randomizer",
+}
+VERSION_POR_DEFECTO = "1.21.11"   # la que aparece seleccionada al abrir
+
 GREEN = (0, 168, 89, 240)
 
 # ======================================================================
@@ -74,6 +91,9 @@ GREEN = (0, 168, 89, 240)
 # ======================================================================
 MANIFEST_URL = "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/manifest.json"
 EXIGIR_ACTUALIZACION = True
+
+# Repositorio oficial de NeoForge (se usa para instalarlo en Minecraft 26.x)
+NEOFORGE_MAVEN = "https://maven.neoforged.net/releases/net/neoforged/neoforge"
 
 # Versión de ESTE launcher. Se compara con la publicada en el manifest.
 # (publicar_launcher.py la sube solo cuando le pasas un número nuevo)
@@ -225,13 +245,15 @@ class RancioLaunch(ctk.CTk):
         self.minecraft_directory = minecraft_launcher_lib.utils.get_minecraft_directory()
         self.progress_max = 0
         self.jugando = False
-        self.version = VERSIONS[0]
-        self.username = ""  # Campo de texto vacío por defecto
+        self.nombres = dict(NOMBRES_VERSION)   # clave (versión) -> nombre visible
+        self.version = VERSION_POR_DEFECTO if VERSION_POR_DEFECTO in VERSIONS else VERSIONS[0]
+        self.username = ""   # Campo de texto vacío por defecto
         self.entry_focus = True
         self.cursor_on = True
         self.cuenta = None
         self.logueando = False
         self.codigo_actual = None
+
         self.ram_max = float(obtener_ram_total_gb())
         cfg = self.cargar_config()
         self.ram_gb = self.ajustar_ram(cfg.get("ram_gb", min(4.0, self.ram_max)))
@@ -239,6 +261,7 @@ class RancioLaunch(ctk.CTk):
         self.ram_focus = False
         self.ram_reemplazar = False
         self.ram_dragging = False
+
         self.auth = MicrosoftAuth(
             os.path.join(self.minecraft_directory, "rancio_auth.json")
         )
@@ -267,13 +290,14 @@ class RancioLaunch(ctk.CTk):
 
         # --- Selector de versión ---
         vy = (VERSION_BOX[1] + VERSION_BOX[3]) // 2
-        self.version_t = self.texto((VERSION_BOX[0] + VERSION_BOX[2] - 44) // 2, vy, self.version, 13, True)
+        self.version_t = self.texto((VERSION_BOX[0] + VERSION_BOX[2] - 44) // 2, vy,
+                                    self.nombre_version(self.version), 13, True)
         cx = VERSION_BOX[2] - 25
         self.canvas.create_line(cx - 6, vy - 3, cx, vy + 3, cx + 6, vy - 3,
                                 fill="#ffffff", width=2, capstyle="round", joinstyle="round")
         self.menu = tk.Menu(self, tearoff=0, font=("Segoe UI", 11))
         for v in VERSIONS:
-            self.menu.add_command(label=v, command=lambda v=v: self.set_version(v))
+            self.menu.add_command(label=self.nombre_version(v), command=lambda v=v: self.set_version(v))
         self.after(300, lambda: threading.Thread(target=self.cargar_versiones_publicadas, daemon=True).start())
 
         # --- Control de RAM ---
@@ -338,7 +362,7 @@ class RancioLaunch(ctk.CTk):
     def mostrar_cursor(self):
         visible = self.entry_focus and self.cursor_on
         self.canvas.itemconfigure(self.cursor, state="normal" if visible else "hidden")
-        if "ram_cursor" in self.__dict__:  # todavía no existe durante el arranque
+        if "ram_cursor" in self.__dict__:   # todavía no existe durante el arranque
             visible_ram = self.ram_focus and self.cursor_on
             self.canvas.itemconfigure(self.ram_cursor, state="normal" if visible_ram else "hidden")
 
@@ -393,12 +417,14 @@ class RancioLaunch(ctk.CTk):
 
     def on_click(self, e):
         self.canvas.focus_set()
+
         en_ram = self.dentro(RAM_BOX, e.x, e.y) and not self.jugando
         if self.ram_focus and not en_ram:
             self.confirmar_ram()
         if en_ram and not self.ram_focus:
             self.ram_focus = True
             self.ram_reemplazar = True   # lo primero que se escriba reemplaza el valor
+
         self.entry_focus = self.dentro(ENTRY_BOX, e.x, e.y)
         self.cursor_on = True
         self.mostrar_cursor()
@@ -534,17 +560,31 @@ class RancioLaunch(ctk.CTk):
         self.canvas.itemconfigure(self.copy_btn, text="✓", fill="#00e676")
         self.after(1200, lambda: self.canvas.itemconfigure(self.copy_btn, text="📋", fill="#00e676"))
 
+    # ------------------------------------------------------------------
+    # SELECTOR DE VERSIÓN / PACKS
+    # ------------------------------------------------------------------
+    def nombre_version(self, v):
+        """Nombre visible de un pack (si no tiene, se muestra la versión tal cual)."""
+        return self.nombres.get(v) or v
+
     def set_version(self, v):
-        self.version = v
-        self.set_texto(self.version_t, v)
+        self.version = v   # la clave interna sigue siendo la versión de Minecraft
+        self.set_texto(self.version_t, self.nombre_version(v))
 
     def cargar_versiones_publicadas(self):
         """Reemplaza la lista fija de versiones por las que hay publicadas en el manifest."""
         try:
             manifest = modsync.obtener_manifest(MANIFEST_URL, timeout=8)
         except Exception:
-            return  # sin internet: se queda la lista fija
-        versiones = list(manifest.get("versions", {}).keys())
+            return   # sin internet: se queda la lista fija
+
+        publicadas = manifest.get("versions", {})
+        for v, info in publicadas.items():
+            nombre = (info or {}).get("name")
+            if nombre:
+                self.nombres[v] = nombre   # el nombre del manifest manda sobre el local
+
+        versiones = list(publicadas.keys())
         if versiones:
             self.mostrar_versiones(versiones)
         self.revisar_actualizacion_launcher(manifest.get("launcher"))
@@ -555,8 +595,8 @@ class RancioLaunch(ctk.CTk):
         def aplicar():
             self.menu.delete(0, "end")
             for v in versiones:
-                self.menu.add_command(label=v, command=lambda v=v: self.set_version(v))
-            self.set_version(versiones[0])
+                self.menu.add_command(label=self.nombre_version(v), command=lambda v=v: self.set_version(v))
+            self.set_version(VERSION_POR_DEFECTO if VERSION_POR_DEFECTO in versiones else versiones[0])
 
         self.after(0, aplicar)
 
@@ -570,13 +610,14 @@ class RancioLaunch(ctk.CTk):
     def revisar_actualizacion_launcher(self, info):
         """Si el manifest trae un launcher más nuevo, ofrece descargarlo e instalarlo."""
         if not info or not getattr(sys, "frozen", False) or sys.platform != "win32":
-            return  # solo tiene sentido en el .exe de Windows
+            return   # solo tiene sentido en el .exe de Windows
         try:
             if self._tupla_version(info["version"]) <= self._tupla_version(APP_VERSION):
                 return
             info["url"]
         except Exception:
             return
+
         ok = self.preguntar(
             "Actualización del launcher",
             f"Hay una versión nueva de RancioLaunch ({info['version']}).\n"
@@ -585,6 +626,7 @@ class RancioLaunch(ctk.CTk):
         )
         if not ok:
             return
+
         self.set_jugando(True)
         try:
             self.aplicar_actualizacion_launcher(info)
@@ -597,6 +639,7 @@ class RancioLaunch(ctk.CTk):
     def aplicar_actualizacion_launcher(self, info):
         exe = sys.executable
         nuevo = exe + ".nuevo"
+
         self.actualizar_estado("Descargando actualización...")
         h = hashlib.sha256()
         with requests.get(info["url"], stream=True, timeout=30) as r:
@@ -638,6 +681,7 @@ class RancioLaunch(ctk.CTk):
                 ":fin\n"
                 'del "%~f0"\n'
             )
+
         # Entorno limpio para que el exe nuevo (PyInstaller onefile) no reutilice
         # la carpeta temporal de este proceso, que va a desaparecer.
         env = {k: v for k, v in os.environ.items() if not k.startswith("_PYI") and k != "_MEIPASS2"}
@@ -662,7 +706,6 @@ class RancioLaunch(ctk.CTk):
                     self.canvas.itemconfigure(self.copy_btn, text="📋", fill="#00e676", state="normal")
             else:
                 self.canvas.itemconfigure(self.copy_btn, state="hidden")
-
         self.after(0, _actualizar)
 
     def set_max(self, max_value):
@@ -755,7 +798,12 @@ class RancioLaunch(ctk.CTk):
         if loader == "forge":
             return vid.startswith(f"{mc}-forge-")
         if loader == "neoforge":
-            # NeoForge numera por versión de MC: 1.21.11 -> 21.11.x
+            # Minecraft nuevo (26.x en adelante): NeoForge usa la misma numeración
+            # que Minecraft -> 26.3 -> neoforge-26.3.0.36-beta
+            mayor = mc.split(".")[0]
+            if mayor.isdigit() and int(mayor) >= 26:
+                return vid.startswith("neoforge-" + mc + ".")
+            # Minecraft clásico: 1.21.11 -> neoforge-21.11.x
             partes = mc.split(".", 1)
             return len(partes) == 2 and vid.startswith("neoforge-" + partes[1] + ".")
         return False
@@ -773,12 +821,17 @@ class RancioLaunch(ctk.CTk):
         if loader == "vanilla":
             return mc
 
+        # Minecraft 26.x + NeoForge: la librería aún no lo entiende ("Version 26.3 is not
+        # supported"), así que se instala con el instalador oficial de NeoForge.
+        if loader == "neoforge" and self._neoforge_nuevo(mc):
+            return self.instalar_neoforge_directo(mc, loader_version, callback)
+
         if not hasattr(mld, "mod_loader"):
             raise RuntimeError("Actualiza la librería: python -m pip install -U minecraft-launcher-lib")
         if loader not in mld.mod_loader.list_mod_loader():
             raise RuntimeError(f"Loader desconocido: '{loader}'")
-
         ml = mld.mod_loader.get_mod_loader(loader)
+
         try:
             lv = loader_version or ml.get_latest_loader_version(mc)
         except Exception:
@@ -800,6 +853,87 @@ class RancioLaunch(ctk.CTk):
                 pass
             self.actualizar_estado(f"Instalando {loader}...")
             ml.install(mc, carpeta, loader_version=lv, callback=callback, java=java)
+        return vid
+
+    @staticmethod
+    def _neoforge_nuevo(mc):
+        """True para Minecraft 26.x o más nuevo (numeración nueva de NeoForge)."""
+        mayor = mc.split(".")[0]
+        return mayor.isdigit() and int(mayor) >= 26
+
+    @staticmethod
+    def _ultima_version_neoforge(mc):
+        """Última versión de NeoForge publicada para ese Minecraft (ej. 26.3 -> 26.3.0.39-beta)."""
+        r = requests.get(NEOFORGE_MAVEN + "/maven-metadata.xml", timeout=15)
+        r.raise_for_status()
+        todas = [v.text.strip() for v in ET.fromstring(r.content).iter("version") if v.text]
+        candidatas = [v for v in todas
+                      if v.startswith(mc + ".") and "+" not in v and "snapshot" not in v.lower()]
+        if not candidatas:
+            raise RuntimeError(f"NeoForge aún no tiene versión para {mc}")
+        candidatas.sort(key=lambda v: [int(x) for x in re.findall(r"\d+", v)])
+        return candidatas[-1]
+
+    def instalar_neoforge_directo(self, mc, loader_version, callback):
+        """Instala NeoForge con su instalador oficial y devuelve el id a lanzar."""
+        carpeta = self.minecraft_directory
+        instaladas = lambda: {v["id"] for v in minecraft_launcher_lib.utils.get_installed_versions(carpeta)}
+
+        lv = loader_version
+        if not lv:
+            try:
+                lv = self._ultima_version_neoforge(mc)
+            except Exception:
+                # sin internet: usa uno ya instalado si existe
+                for vid in sorted(instaladas(), reverse=True):
+                    if self._es_del_loader(vid, "neoforge", mc):
+                        return vid
+                raise
+
+        vid = f"neoforge-{lv}"
+        if vid in instaladas():
+            return vid
+
+        java = self.asegurar_java(mc, callback) or "java"
+
+        self.actualizar_estado("Descargando NeoForge...")
+        url = f"{NEOFORGE_MAVEN}/{lv}/neoforge-{lv}-installer.jar"
+        ruta = os.path.join(tempfile.gettempdir(), f"neoforge-{lv}-installer.jar")
+        with requests.get(url, stream=True, timeout=30) as r:
+            r.raise_for_status()
+            largo = int(r.headers.get("content-length", 0))
+            leido = 0
+            with open(ruta, "wb") as f:
+                for bloque in r.iter_content(chunk_size=1024 * 64):
+                    if not bloque:
+                        continue
+                    f.write(bloque)
+                    leido += len(bloque)
+                    if largo:
+                        v = min(leido / largo, 1.0)
+                        self.after(0, lambda v=v: self.dibujar_progreso(v))
+
+        # El instalador pide que exista launcher_profiles.json
+        perfiles = os.path.join(carpeta, "launcher_profiles.json")
+        if not os.path.exists(perfiles):
+            with open(perfiles, "w", encoding="utf-8") as f:
+                json.dump({"profiles": {}, "version": 3}, f)
+
+        self.actualizar_estado("Instalando NeoForge...")
+        extra = {}
+        if sys.platform == "win32":
+            extra["creationflags"] = subprocess.CREATE_NO_WINDOW
+        r = subprocess.run([java, "-jar", ruta, "--installClient", carpeta],
+                           capture_output=True, text=True, **extra)
+        try:
+            os.remove(ruta)
+        except OSError:
+            pass
+        if r.returncode != 0:
+            print((r.stdout or "") + (r.stderr or ""))
+            raise RuntimeError("Falló el instalador de NeoForge")
+        if vid not in instaladas():
+            raise RuntimeError(f"NeoForge no quedó instalado ({vid})")
         return vid
 
     def asegurar_java(self, mc, callback):
@@ -851,6 +985,9 @@ class RancioLaunch(ctk.CTk):
     def ejecutar_minecraft(self):
         try:
             mc = self.version
+            # Cada pack tiene su propia carpeta de juego (y por lo tanto sus propios mods):
+            #   .minecraft/rancio/1.21.11/mods  -> MundoRancio
+            #   .minecraft/rancio/26.3/mods     -> Randomizer
             game_dir = os.path.join(self.minecraft_directory, "rancio", mc)
             mods_dir = os.path.join(game_dir, "mods")
             os.makedirs(mods_dir, exist_ok=True)
@@ -867,6 +1004,7 @@ class RancioLaunch(ctk.CTk):
             else:
                 options = {"username": self.username.strip() or "RancioJugador", "uuid": "", "token": ""}
             options["gameDirectory"] = game_dir
+
             ram_mb = int(self.ram_gb * 1024)
             options["jvmArguments"] = [f"-Xmx{ram_mb}M", f"-Xms{min(ram_mb, 1024)}M"]
 
@@ -903,16 +1041,18 @@ class RancioLaunch(ctk.CTk):
             comando = minecraft_launcher_lib.command.get_minecraft_command(
                 version_id, self.minecraft_directory, options
             )
+
             self.after(0, self.iconify)
             extra = {}
             if sys.platform == "win32":
-                extra["creationflags"] = subprocess.CREATE_NO_WINDOW  # sin ventana de consola
+                extra["creationflags"] = subprocess.CREATE_NO_WINDOW   # sin ventana de consola
             subprocess.call(
                 comando, cwd=game_dir,
                 stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                 **extra
             )
             self.after(0, self.deiconify)
+
             self.actualizar_estado("Listo para jugar")
 
         except Cancelado:
@@ -933,6 +1073,6 @@ if __name__ == "__main__":
         app = RancioLaunch()
         app.mainloop()
     except Exception as e:
-        print("\n--- Error al iniciar el Launcher ---")
+        print("\n--- ¡Ocurrió un error al iniciar el Launcher! ---")
         traceback.print_exc()
-        input("\nPresiona Enter para cerrar la consola...") #nahuel
+        input("\nPresiona Enter para cerrar la consola...")  # nahuel

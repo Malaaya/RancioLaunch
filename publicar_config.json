@@ -1,5 +1,18 @@
 {
-  "carpeta_mods": "D:\\RancioLaunchMods",
-  "version": "1.21.11",
-  "loader": "neoforge"
+  "perfiles": [
+    {
+      "nombre": "MundoRancio",
+      "version": "1.21.11",
+      "loader": "neoforge",
+      "loader_version": "",
+      "carpeta_mods": "D:\\RancioLaunchMods"
+    },
+    {
+      "nombre": "Randomizer",
+      "version": "26.3",
+      "loader": "neoforge",
+      "loader_version": "",
+      "carpeta_mods": "D:\\RancioLaunchMods_Randomizer"
+    }
+  ]
 }

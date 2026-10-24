@@ -1,12 +1,19 @@
-"""Publica tu carpeta de mods para que los launchers de tus amigos se actualicen.
+"""Publica tus carpetas de mods para que los launchers de tus amigos se actualicen.
+
+Cada "perfil" es un pack con su propia carpeta de mods en tu PC, por ejemplo:
+
+    MundoRancio  -> Minecraft 1.21.11, neoforge, D:\\RancioLaunchMods
+    Randomizer   -> Minecraft 26.3,    neoforge, D:\\RancioLaunchMods_Randomizer
 
 Uso (desde la carpeta RancioLaunch):
-    python publicar.py
 
-La primera vez te pregunta la carpeta de mods, la versión de Minecraft y el loader,
-y lo guarda en publicar_config.json. Las siguientes veces solo corre y listo.
-Loaders válidos: fabric, forge, neoforge, quilt, vanilla.
-Para cambiar algo: python publicar.py --reconfigurar
+    python publicar.py                 -> te muestra un menú para elegir qué perfil subir
+    python publicar.py Randomizer      -> sube solo ese perfil (por nombre o por versión)
+    python publicar.py todos           -> sube todos los perfiles
+    python publicar.py --nuevo         -> agrega un perfil nuevo
+    python publicar.py --reconfigurar  -> borra los perfiles y los vuelve a crear
+
+Los perfiles se guardan en publicar_config.json.
 
 Qué hace: copia tus .jar a publicar/<versión>/, regenera manifest.json (con hashes)
 y hace git add + commit + push. Requiere que esta carpeta sea un repo de GitHub público.
@@ -17,15 +24,17 @@ import re
 import shutil
 import subprocess
 import sys
-from urllib.parse import quote
 
-from generar_manifest import sha256
+from generar_manifest import sha256, generar_manifest
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 RAIZ = os.path.join(AQUI, "publicar")
 CONFIG = os.path.join(AQUI, "publicar_config.json")
 LIMITE_GITHUB_MB = 95
 LOADERS = {"vanilla", "fabric", "forge", "neoforge", "quilt"}
+
+# Solo se usa para convertir tu config vieja (una sola versión) al formato con perfiles
+NOMBRES_CONOCIDOS = {"1.21.11": "MundoRancio", "26.3": "Randomizer"}
 
 
 def git(*args):
@@ -44,28 +53,126 @@ def url_base_desde_git():
     return f"https://raw.githubusercontent.com/{m.group(1)}/{m.group(2)}/{rama}/publicar"
 
 
-def configurar():
-    print("--- Configuración (se guarda en publicar_config.json) ---")
-    carpeta = input("Carpeta con tus mods (ruta completa): ").strip().strip('"')
-    version = input("Versión de Minecraft (ej. 1.20.1): ").strip()
+# ----------------------------------------------------------------------
+# CONFIGURACIÓN (perfiles)
+# ----------------------------------------------------------------------
+def pedir_perfil():
+    print("--- Nuevo perfil ---")
     while True:
-        loader = input("Loader (fabric / forge / neoforge / quilt / vanilla): ").strip().lower() or "fabric"
+        version = input("Versión de Minecraft (ej. 1.21.11 o 26.3): ").strip()
+        if version:
+            break
+    nombre = input(f"Nombre que verán en el launcher [{NOMBRES_CONOCIDOS.get(version, version)}]: ").strip()
+    nombre = nombre or NOMBRES_CONOCIDOS.get(version, version)
+    while True:
+        loader = input("Loader (fabric / forge / neoforge / quilt / vanilla) [neoforge]: ").strip().lower() or "neoforge"
         if loader in LOADERS:
             break
         print(f"  '{loader}' no es válido, escribe uno de: {', '.join(sorted(LOADERS))}")
-    cfg = {"carpeta_mods": carpeta, "version": version, "loader": loader}
+    loader_version = input("Versión exacta del loader (Enter = la última): ").strip().replace(" ", "")
+    carpeta = input("Carpeta con los .jar de este perfil (ruta completa): ").strip().strip('"')
+    return {
+        "nombre": nombre,
+        "version": version,
+        "loader": loader,
+        "loader_version": loader_version,
+        "carpeta_mods": carpeta,
+    }
+
+
+def guardar_config(cfg):
     with open(CONFIG, "w", encoding="utf-8") as f:
         json.dump(cfg, f, indent=2, ensure_ascii=False)
-    return cfg
+
+
+def migrar_formato_viejo(cfg):
+    """{carpeta_mods, version, loader} -> {perfiles: [ ... ]}"""
+    version = cfg.get("version", "")
+    perfil = {
+        "nombre": NOMBRES_CONOCIDOS.get(version, version),
+        "version": version,
+        "loader": cfg.get("loader", "neoforge"),
+        "loader_version": "",
+        "carpeta_mods": cfg.get("carpeta_mods", ""),
+    }
+    nuevo = {k: v for k, v in cfg.items() if k not in ("carpeta_mods", "version", "loader")}
+    nuevo["perfiles"] = [perfil]
+    return nuevo
 
 
 def cargar_config():
     if "--reconfigurar" in sys.argv or not os.path.isfile(CONFIG):
-        return configurar()
+        cfg = {"perfiles": []}
+        print("Vamos a registrar tus perfiles de mods.")
+        while True:
+            cfg["perfiles"].append(pedir_perfil())
+            if input("¿Agregar otro perfil? (s/N): ").strip().lower() != "s":
+                break
+        guardar_config(cfg)
+        return cfg
+
     with open(CONFIG, encoding="utf-8") as f:
-        return json.load(f)
+        cfg = json.load(f)
+
+    if "perfiles" not in cfg:   # config del formato anterior
+        cfg = migrar_formato_viejo(cfg)
+        guardar_config(cfg)
+        print("(Convertí tu publicar_config.json al formato con perfiles.)")
+
+    if "--nuevo" in sys.argv:
+        cfg["perfiles"].append(pedir_perfil())
+        guardar_config(cfg)
+
+    return cfg
 
 
+def validar(cfg):
+    perfiles = cfg.get("perfiles") or []
+    if not perfiles:
+        sys.exit("No hay perfiles en publicar_config.json. Usa --reconfigurar.")
+    vistas = set()
+    for p in perfiles:
+        if p.get("loader") not in LOADERS:
+            sys.exit(f"Loader inválido en el perfil '{p.get('nombre')}': '{p.get('loader')}'.")
+        if not p.get("version"):
+            sys.exit(f"El perfil '{p.get('nombre')}' no tiene versión.")
+        if p["version"] in vistas:
+            sys.exit(f"Dos perfiles usan la versión {p['version']}. Cada perfil necesita una versión distinta.")
+        vistas.add(p["version"])
+
+
+def elegir_perfiles(cfg):
+    perfiles = cfg["perfiles"]
+
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    if args:
+        q = " ".join(args).strip().lower()
+        if q in ("todos", "todo", "all"):
+            return perfiles
+        elegidos = [p for p in perfiles if q in (p["nombre"].lower(), p["version"].lower())]
+        if not elegidos:
+            disponibles = ", ".join(f"{p['nombre']} ({p['version']})" for p in perfiles)
+            sys.exit(f"No existe el perfil '{q}'. Disponibles: {disponibles}")
+        return elegidos
+
+    if len(perfiles) == 1:
+        return perfiles
+
+    print("¿Qué quieres publicar?")
+    for i, p in enumerate(perfiles, 1):
+        print(f"  {i}) {p['nombre']}  (Minecraft {p['version']}, {p['loader']})  <-  {p['carpeta_mods']}")
+    print(f"  {len(perfiles) + 1}) Todos")
+    while True:
+        r = input("Elige un número: ").strip()
+        if r.isdigit() and 1 <= int(r) <= len(perfiles) + 1:
+            n = int(r)
+            return perfiles if n == len(perfiles) + 1 else [perfiles[n - 1]]
+        print("  Opción inválida.")
+
+
+# ----------------------------------------------------------------------
+# PUBLICACIÓN
+# ----------------------------------------------------------------------
 def sincronizar(origen, destino):
     """Deja destino con exactamente los .jar de origen."""
     os.makedirs(destino, exist_ok=True)
@@ -75,7 +182,7 @@ def sincronizar(origen, destino):
     for f in os.listdir(destino):
         if f.lower().endswith(".jar") and f not in jars:
             os.remove(os.path.join(destino, f))
-            print(f"  - quitado {f}")
+            print(f"    - quitado {f}")
     for f in sorted(jars):
         src, dst = os.path.join(origen, f), os.path.join(destino, f)
         mb = os.path.getsize(src) / 1024 / 1024
@@ -83,61 +190,38 @@ def sincronizar(origen, destino):
             sys.exit(f"{f} pesa {mb:.0f} MB y GitHub no deja subir archivos de más de 100 MB")
         if not os.path.isfile(dst) or sha256(src) != sha256(dst):
             shutil.copy2(src, dst)
-            print(f"  + copiado {f}")
+            print(f"    + copiado {f}")
 
 
-def generar_manifest(base):
-    manifest = {"versions": {}}
-    _previo = os.path.join(RAIZ, "manifest.json")
-    if os.path.isfile(_previo):  # conserva los datos del launcher publicados antes
-        try:
-            with open(_previo, encoding="utf-8") as _f:
-                _l = json.load(_f).get("launcher")
-            if _l:
-                manifest["launcher"] = _l
-        except Exception:
-            pass
-    for version in sorted(os.listdir(RAIZ)):
-        carpeta = os.path.join(RAIZ, version)
-        if not os.path.isdir(carpeta):
-            continue
-        loader, loader_version = "vanilla", None
-        txt = os.path.join(carpeta, "loader.txt")
-        if os.path.isfile(txt):
-            partes = open(txt, encoding="utf-8").read().split()
-            if partes:
-                loader = partes[0].lower()
-            if len(partes) > 1:
-                loader_version = partes[1]
-        mods = [{
-            "file": f,
-            "url": f"{base}/{quote(version)}/{quote(f)}",
-            "sha256": sha256(os.path.join(carpeta, f)),
-            "size": os.path.getsize(os.path.join(carpeta, f)),
-        } for f in sorted(os.listdir(carpeta)) if f.lower().endswith(".jar")]
-        manifest["versions"][version] = {"loader": loader, "loader_version": loader_version, "mods": mods}
-        print(f"  {version}: {loader}, {len(mods)} mods")
-    with open(os.path.join(RAIZ, "manifest.json"), "w", encoding="utf-8") as f:
-        json.dump(manifest, f, indent=2, ensure_ascii=False)
+def escribir_loader_txt(destino, perfil):
+    linea = perfil["loader"]
+    if perfil.get("loader_version"):
+        linea += f" {perfil['loader_version']}"
+    with open(os.path.join(destino, "loader.txt"), "w", encoding="utf-8") as f:
+        f.write(linea + "\n")
+        f.write(f"nombre={perfil['nombre']}\n")
 
 
 def main():
     cfg = cargar_config()
-    origen = cfg["carpeta_mods"]
-    if cfg.get("loader") not in LOADERS:
-        sys.exit(f"Loader inválido en publicar_config.json: '{cfg.get('loader')}'. Usa --reconfigurar.")
-    if not os.path.isdir(origen):
-        sys.exit(f"No existe la carpeta: {origen}  (usa --reconfigurar)")
+    validar(cfg)
 
     base = cfg.get("base_url") or url_base_desde_git()
     if not base:
         sys.exit("No pude deducir la URL de GitHub. Revisa que esta carpeta sea un repo con 'origin' en GitHub.")
 
+    elegidos = elegir_perfiles(cfg)
+
     print("1) Copiando mods...")
-    dest = os.path.join(RAIZ, cfg["version"])
-    sincronizar(origen, dest)
-    with open(os.path.join(dest, "loader.txt"), "w", encoding="utf-8") as f:
-        f.write(cfg["loader"] + "\n")
+    for p in elegidos:
+        origen = p["carpeta_mods"]
+        if not os.path.isdir(origen):
+            sys.exit(f"No existe la carpeta del perfil '{p['nombre']}': {origen}\n"
+                     f"Edita publicar_config.json o usa --reconfigurar.")
+        print(f"  [{p['nombre']}]  {origen}  ->  publicar/{p['version']}/")
+        destino = os.path.join(RAIZ, p["version"])
+        sincronizar(origen, destino)
+        escribir_loader_txt(destino, p)
 
     print("2) Generando manifest.json...")
     generar_manifest(base)
@@ -147,19 +231,20 @@ def main():
     if not git("status", "--porcelain", "publicar").stdout.strip():
         print("No hay cambios nuevos, todo ya estaba publicado.")
     else:
-        c = git("commit", "-m", f"Mods {cfg['version']} actualizados")
+        nombres = ", ".join(p["nombre"] for p in elegidos)
+        c = git("commit", "-m", f"Mods actualizados: {nombres}")
         if c.returncode != 0:
             sys.exit(c.stdout + c.stderr)
-        p = git("push")
-        if p.returncode != 0 and "upstream" in p.stderr:
+        p_ = git("push")
+        if p_.returncode != 0 and "upstream" in p_.stderr:
             rama = git("rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
-            p = git("push", "-u", "origin", rama)
-        if p.returncode != 0:
-            sys.exit("Falló el push:\n" + p.stdout + p.stderr)
+            p_ = git("push", "-u", "origin", rama)
+        if p_.returncode != 0:
+            sys.exit("Falló el push:\n" + p_.stdout + p_.stderr)
         print("Subido.")
 
     print(f"\nMANIFEST_URL = \"{base}/manifest.json\"")
-    print("(si es la primera vez, pégala en launcher.py y recompila; GitHub puede tardar unos minutos en reflejar cambios)")
+    print("(GitHub puede tardar unos minutos en reflejar los cambios)")
 
 
 if __name__ == "__main__":
