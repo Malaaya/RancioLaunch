@@ -509,6 +509,25 @@
           "size": 1437872
         }
       ]
+    },
+    "26.3": {
+      "name": "Randomizer",
+      "loader": "neoforge",
+      "loader_version": null,
+      "mods": [
+        {
+          "file": "iris-neoforge-1.11.7+mc26.3.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/26.3/iris-neoforge-1.11.7%2Bmc26.3.jar",
+          "sha256": "2260506334a17ac566ea30169ab491201208f55c1c7212bb987bc0c7c59a8d93",
+          "size": 2804761
+        },
+        {
+          "file": "sodium-neoforge-0.9.2+mc26.3.jar",
+          "url": "https://raw.githubusercontent.com/Malaaya/RancioLaunch/main/publicar/26.3/sodium-neoforge-0.9.2%2Bmc26.3.jar",
+          "sha256": "5514d68728f7d332da26a0809acf633fd2f9bbfe956891c85d3194dcb2aaf590",
+          "size": 1208169
+        }
+      ]
     }
   },
   "launcher": {
